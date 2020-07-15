@@ -4,23 +4,57 @@ services:
   app:
     build:
       context: .
+    expose:
+      - 8000
     volumes:
       - .:/app
+      - static_volume:/app/static
+      - media_volume:/app/media
     command: >
       sh -c "python manage.py wait_for_db &&
              python manage.py migrate &&
-             python manage.py runserver 0.0.0.0:8000"
+             python manage.py collectstatic --no-input &&
+             gunicorn --bind 0.0.0.0:8000 app.wsgi:application"
     environment:
       - DB_HOST=db
-      - DB_NAME=testdb
-      - DB_USER=testuser
-      - DB_PASSWORD=testpass
+      - DB_NAME=app
+      - DB_USER=postgres
+      - DB_PASSWORD=somethingsecretpassword
+      - DB_PORT=5432
+      - DJANGO_SETTINGS_MODULE=app.settings
     depends_on:
       - db
 
   db:
     image: postgres:12-alpine
     environment:
-      - POSTGRES_DB=testdb
-      - POSTGRES_USER=testuser
-      - POSTGRES_PASSWORD=testpass
+      - POSTGRES_DB=app
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=somethingsecretpassword
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+
+  nginx:
+      build: ./nginx
+      ports:
+        - 80:80
+        - 443:443
+      volumes:
+        - static_volume:/app/static
+        - media_volume:/app/media
+        - ./data/certbot/conf:/etc/letsencrypt
+        - ./data/certbot/www:/var/www/certbot
+      depends_on:
+        - app
+
+  certbot:
+    image: certbot/certbot
+    container_name: certbot
+    volumes:
+      - ./data/certbot/conf:/etc/letsencrypt
+      - ./data/certbot/www:/var/www/certbot
+
+volumes:
+  static_volume:
+  postgres_data:
+  media_volume:
