@@ -110,3 +110,10 @@ dist
 venv/
 __pychache__/
 *.pyc
+
+
+# Environment files
+*.env
+
+# Static files
+static/
