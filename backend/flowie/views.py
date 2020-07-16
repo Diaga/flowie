@@ -147,16 +147,16 @@ class PRLinkedIssueViewSet(viewsets.GenericViewSet):
 
             finds_fix_http = re.findall('fix[\\S\\s]+issues/([0-9]+)', body,
                                         re.IGNORECASE)
-            if len(finds_fix_http) == 0 and \
-                len(finds_fixes_hashtag) == 0 and \
-                    len(finds_fix_hashtag) == 0:
+            if len(finds_fix_http) != 0 or \
+                len(finds_fixes_hashtag) != 0 or \
+                    len(finds_fix_hashtag) != 0:
                 matches = []
                 if len(finds_fix_http) != 0:
-                    matches.append(*finds_fix_http)
+                    matches += finds_fix_http
                 elif len(finds_fix_hashtag) != 0:
-                    matches.append(*finds_fix_hashtag)
+                    matches += finds_fix_hashtag
                 elif len(finds_fixes_hashtag) != 0:
-                    matches.append(*finds_fixes_hashtag)
+                    matches += finds_fixes_hashtag
 
                 response_data = []
                 for issue_number in matches:
